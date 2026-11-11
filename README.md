@@ -7,18 +7,27 @@ It works on macOS and Linux, on both Intel/AMD (x86_64) and ARM64.
 
 ## Install
 
-Add the tap, then install the cask:
+```bash
+brew install --cask CerealKiller97/tap/linkwarden-cli
+```
+
+This adds the tap and installs the cask in one step. Since Homebrew 6.0, items from third-party taps
+must be trusted before they're installed. Using the full name `CerealKiller97/tap/linkwarden-cli`
+trusts only this cask, so no separate step is needed.
+
+### Installing by the short name
+
+To install with the short name `linkwarden-cli`, add the tap and trust the cask first:
 
 ```bash
 brew tap CerealKiller97/tap
+brew trust --cask CerealKiller97/tap/linkwarden-cli
 brew install --cask linkwarden-cli
 ```
 
-Or do both in one step:
-
-```bash
-brew install CerealKiller97/tap/linkwarden-cli
-```
+Without `brew trust`, Homebrew 6.0 and later refuses to install from the tap by the short name.
+Run `brew trust` with no arguments to list what you've trusted. Homebrew recommends trusting single
+casks rather than whole taps; see [Tap Trust](https://docs.brew.sh/Tap-Trust).
 
 Check that it works:
 
@@ -43,6 +52,7 @@ brew upgrade --cask linkwarden-cli
 
 ```bash
 brew uninstall --cask linkwarden-cli
+brew untrust --cask CerealKiller97/tap/linkwarden-cli
 brew untap CerealKiller97/tap
 ```
 
