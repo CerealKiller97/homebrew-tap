@@ -1,0 +1,116 @@
+name: Test Homebrew Cask Tap
+
+# Checks every pull request to main: lints and audits the casks, then installs each one on macOS
+# and Linux and runs it. When all of that passes, the PR is merged automatically.
+#
+# GoReleaser opens a PR here for every linkwarden-cli release, so a release that passes these
+# checks reaches `brew install` without anyone having to merge it by hand.
+
+on:
+  pull_request:
+    branches: [main]
+    # ready_for_review: a draft PR is tested but not merged, so marking it ready runs this again.
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: 🔎 Style and audit
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # Taps this checkout as cerealkiller97/tap, so the brew commands below see the PR's casks.
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@main
+
+      # GoReleaser writes the casks and overwrites them on every release, so style offenses in
+      # what it generates can't be fixed here. These cops only flag that generated output:
+      #   Cask/StanzaOrder      completion stanzas come after `binary`
+      #   Cask/InstallSteps     the quarantine hook is a `postflight` block, not `postflight_steps`
+      #   Cask/ZapNotRequired   a "# No zap stanza required" comment instead of `zap :not_required`
+      - name: 🎨 Brew style
+        run: brew style --except-cops Cask/StanzaOrder,Cask/InstallSteps,Cask/ZapNotRequired cerealkiller97/tap
+
+      - name: 🧐 Brew audit
+        run: brew audit --strict --online --tap cerealkiller97/tap
+
+      # Loads every cask for each OS and architecture, so a broken on_macos or on_linux block fails.
+      - name: 🧩 Load casks on every platform
+        run: brew readall --os=all --arch=all cerealkiller97/tap
+
+  install:
+    name: 📦 Install (${{ matrix.os }})
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        # macos-latest is Apple Silicon. ubuntu-latest covers the on_linux block.
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@main
+
+      # Installs every cask in the tap, checks the installed version matches the cask, and runs
+      # each binary the cask links.
+      - name: 🍺 Install and run each cask
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in Casks/*.rb; do
+            cask="cerealkiller97/tap/$(basename "$file" .rb)"
+            echo "::group::${cask}"
+            brew install --cask "$cask"
+
+            info="$(brew info --cask --json=v2 "$cask")"
+            version="$(jq -r '.casks[0].version' <<<"$info")"
+            installed="$(jq -r '.casks[0].installed' <<<"$info")"
+            if [[ "$installed" != "$version" ]]; then
+              echo "::error file=${file}::installed ${installed}, but the cask says ${version}"
+              exit 1
+            fi
+
+            for binary in $(jq -r '.casks[0].artifacts[] | select(has("binary")) | .binary[0]' <<<"$info"); do
+              output="$("$binary" --version)"
+              echo "${binary} --version: ${output}"
+              if [[ "$output" != *"$version"* ]]; then
+                echo "::error file=${file}::${binary} --version printed '${output}', expected ${version}"
+                exit 1
+              fi
+            done
+
+            brew uninstall --cask "$cask"
+            echo "::endgroup::"
+          done
+
+  merge:
+    name: 🔀 Merge
+    needs: [lint, install]
+    # Only PRs from branches of this repository (GoReleaser's, or yours), never from forks, and
+    # never drafts.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Merge the pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        # --match-head-commit refuses to merge if a commit was pushed after the one tested here.
+        run: gh pr merge "$PR_URL" --merge --delete-branch --match-head-commit "$HEAD_SHA"
