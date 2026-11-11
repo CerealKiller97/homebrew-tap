@@ -4,7 +4,7 @@ cask "linkwarden-cli" do
 
   on_macos do
     on_arm do
-      sha256 "071242a75cf9954a5faf0f912742c3f74c2ac6f8a901265a957424fc1b47f5bb"
+      sha256 "fe0aa85f56a4079f4f1f295c44c4483726c581313b59786dd4c0c4435baf7798"
       url "https://github.com/CerealKiller97/linkwarden-cli/releases/download/v#{version}/linkwarden_#{version}_darwin_arm64.tar.gz"
       rename "linkwarden_1.0.0_darwin_arm64/linkwarden", "linkwarden"
       rename "linkwarden_1.0.0_darwin_arm64/completions/linkwarden.bash", "completions/linkwarden.bash"
@@ -12,7 +12,7 @@ cask "linkwarden-cli" do
       rename "linkwarden_1.0.0_darwin_arm64/completions/linkwarden.zsh", "completions/linkwarden.zsh"
     end
     on_intel do
-      sha256 "4e024d79962782e0430a960d05c6ebea7b4b130e7b2adc1e5299cdeb2135a064"
+      sha256 "6d6f37fc6f474f089f014c19b262ac5ada4fbc7e029fca45ff7a25bcf951aed7"
       url "https://github.com/CerealKiller97/linkwarden-cli/releases/download/v#{version}/linkwarden_#{version}_darwin_amd64.tar.gz"
       rename "linkwarden_1.0.0_darwin_amd64/linkwarden", "linkwarden"
       rename "linkwarden_1.0.0_darwin_amd64/completions/linkwarden.bash", "completions/linkwarden.bash"
@@ -22,7 +22,7 @@ cask "linkwarden-cli" do
   end
   on_linux do
     on_arm do
-      sha256 "d5704dfa86d7103685ac4811f4f0bf01301df3ec8e293fe87e39159f39ebca25"
+      sha256 "ef93a6c1f17b5f27a9d85aeca737759bb853bec07af34cbfbeeb2516d9700127"
       url "https://github.com/CerealKiller97/linkwarden-cli/releases/download/v#{version}/linkwarden_#{version}_linux_arm64.tar.gz"
       rename "linkwarden_1.0.0_linux_arm64/linkwarden", "linkwarden"
       rename "linkwarden_1.0.0_linux_arm64/completions/linkwarden.bash", "completions/linkwarden.bash"
@@ -30,7 +30,7 @@ cask "linkwarden-cli" do
       rename "linkwarden_1.0.0_linux_arm64/completions/linkwarden.zsh", "completions/linkwarden.zsh"
     end
     on_intel do
-      sha256 "a8ee5c0024619e271ce0689c1f169e86d78e2f06d33cc0d81ad5c167d3600e20"
+      sha256 "7b048dff062f69d4ec936e0ae236c9e51bbd40b8d1bedc0e9bb37c62d55feffd"
       url "https://github.com/CerealKiller97/linkwarden-cli/releases/download/v#{version}/linkwarden_#{version}_linux_amd64.tar.gz"
       rename "linkwarden_1.0.0_linux_amd64/linkwarden", "linkwarden"
       rename "linkwarden_1.0.0_linux_amd64/completions/linkwarden.bash", "completions/linkwarden.bash"
