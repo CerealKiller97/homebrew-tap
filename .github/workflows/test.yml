@@ -31,14 +31,20 @@ jobs:
       - name: Set up Homebrew
         uses: Homebrew/actions/setup-homebrew@main
 
+      # GoReleaser writes the casks and overwrites them on every release, so style offenses in
+      # what it generates can't be fixed here. These cops only flag that generated output:
+      #   Cask/StanzaOrder      completion stanzas come after `binary`
+      #   Cask/InstallSteps     the quarantine hook is a `postflight` block, not `postflight_steps`
+      #   Cask/ZapNotRequired   a "# No zap stanza required" comment instead of `zap :not_required`
       - name: 🎨 Brew style
-        run: brew style cerealkiller97/tap
+        run: brew style --except-cops Cask/StanzaOrder,Cask/InstallSteps,Cask/ZapNotRequired cerealkiller97/tap
 
       - name: 🧐 Brew audit
         run: brew audit --strict --online --tap cerealkiller97/tap
 
-      - name: 🧩 Tap syntax
-        run: brew test-bot --only-tap-syntax
+      # Loads every cask for each OS and architecture, so a broken on_macos or on_linux block fails.
+      - name: 🧩 Load casks on every platform
+        run: brew readall --os=all --arch=all cerealkiller97/tap
 
   install:
     name: 📦 Install (${{ matrix.os }})
